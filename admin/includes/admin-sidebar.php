@@ -38,7 +38,7 @@
                 </a>
             </li>
             <li class="nav-item fw-bold">
-                <a href="../logics/logout.php" class="nav-link text-dark sidebarLink">
+                <a href="../../logics/logout.php" class="nav-link text-dark sidebarLink">
                     <i class="fa-solid fa-power-off" data-bs-toggle="tooltip" title="Logout" style="width: 15px;"></i><span class="ms-3 d-none d-md-inline">Logout</span>
                 </a>
             </li>

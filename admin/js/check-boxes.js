@@ -1,80 +1,76 @@
-/*----------------------------------------------------
-    Block and Delete button disable based on checkboxes
-------------------------------------------------------*/
+document.addEventListener("DOMContentLoaded", function () {
 
-document.querySelectorAll('#myTable input[type="checkbox"]').forEach(function (checkbox) {
-    checkbox.addEventListener('change', function () {
-        var path = window.location.pathname;
-        var page = path.split("/").pop();
-        var a = document.querySelectorAll('#myTable input[type="checkbox"]:checked').length;
-        if (a > 0) 
-        {
-            document.getElementById('deleteSelected').classList.remove('disabled');
+    // Bind checkbox events on page load
+    function bindCheckboxEvents() {
+        document.querySelectorAll('#myTable input[type="checkbox"]').forEach(function (checkbox) {
+            checkbox.addEventListener('change', handleCheckboxChange);
+        });
+    }
 
-            /* ----------------------------------- block / unblock ---------------------------------- */
-            if(page == "blocked.php")
-            {
-                document.getElementById('unblockSelected').classList.remove('disabled');
-            }
-            else
-            {
-                document.getElementById('blockSelected').classList.remove('disabled');
-            }
-            /* ----------------------------------- block / unblock ---------------------------------- */
+    // Handles enabling/disabling action buttons based on checkbox state
+    function handleCheckboxChange() {
+        const path = window.location.pathname;
+        const page = path.split("/").pop();
+        const checkedCount = document.querySelectorAll('#myTable input[type="checkbox"]:checked').length;
 
-        } 
-        else 
-        {
-            document.getElementById('deleteSelected').classList.add('disabled');
+        // Enable/disable delete button
+        toggleButton('deleteSelected', checkedCount > 0);
 
-            /* ----------------------------------- block / unblock ---------------------------------- */
-            if(page == "blocked.php")
-            {
-                document.getElementById('unblockSelected').classList.add('disabled');
-            }
-            else
-            {
-                document.getElementById('blockSelected').classList.add('disabled');
-            }
-            /* ----------------------------------- block / unblock ---------------------------------- */
-
-        }
-    });
-});
-
-
-/*----------------------------------------------------
-    Check all checkboxes
-------------------------------------------------------*/
-
-document.querySelector('#myTable #checkAll').addEventListener('click', function () {
-    var isChecked = this.checked;
-    var checkboxes = document.querySelectorAll('#myTable tr:has(td) input[type="checkbox"]');
-
-    checkboxes.forEach(function (checkbox) {
-        checkbox.checked = isChecked;
-    });
-});
-
-var checkboxes = document.querySelectorAll('#myTable tr:has(td) input[type="checkbox"]');
-var checkAllCheckbox = document.querySelector('#checkAll');
-
-checkboxes.forEach(function (checkbox) {
-    checkbox.addEventListener('click', function () {
-        var isChecked = this.checked;
-        var isHeaderChecked = checkAllCheckbox.checked;
-
-        if (!isChecked && isHeaderChecked) {
-            checkAllCheckbox.checked = isChecked;
+        // Enable/disable block/unblock button based on current page
+        if (page === "blocked.php") {
+            toggleButton('unblockSelected', checkedCount > 0);
         } else {
-            var allUnchecked = true;
-
-            checkboxes.forEach(function (checkbox) {
-                if (!checkbox.checked) {
-                    allUnchecked = false;
-                }
-            });
-            checkAllCheckbox.checked = allUnchecked;
+            toggleButton('blockSelected', checkedCount > 0);
         }
+    }
+
+    // Utility function to enable/disable a button
+    function toggleButton(id, enable) {
+        const btn = document.getElementById(id);
+        if (enable) {
+            btn.classList.remove('disabled');
+        } else {
+            btn.classList.add('disabled');
+        }
+    }
+
+    // Handle "Check All" checkbox click event
+    function bindCheckAllEvent() {
+        const checkAll = document.querySelector('#myTable #checkAll');
+        checkAll.addEventListener('click', function () {
+            const isChecked = this.checked;
+            // Apply check/uncheck to all body checkboxes
+            document.querySelectorAll('#myTable tbody input[type="checkbox"]').forEach(function (cb) {
+                cb.checked = isChecked;
+                cb.dispatchEvent(new Event('change'));  // trigger individual checkbox event
+            });
+        });
+    }
+
+    // Sync the "Check All" checkbox status based on individual checkboxes
+    function bindIndividualCheckboxesSync() {
+        const checkboxes = document.querySelectorAll('#myTable tbody input[type="checkbox"]');
+        const checkAll = document.querySelector('#myTable #checkAll');
+
+        checkboxes.forEach(function (cb) {
+            cb.addEventListener('click', function () {
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                checkAll.checked = allChecked;
+            });
+        });
+    }
+
+    // Initial bindings when page is first loaded
+    bindCheckboxEvents();
+    bindCheckAllEvent();
+    bindIndividualCheckboxesSync();
+
+    // Handle DataTables redraw: rebind checkboxes after table pagination/filter redraw
+    const dataTable = new DataTable(document.querySelector('#myTable'));
+    dataTable.on('draw', function () {
+        bindCheckboxEvents();
+        bindCheckAllEvent();
+        bindIndividualCheckboxesSync();
     });
+
 });
